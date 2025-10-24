@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice - Order #{{ order.id }}</title>
+    <style>
+        body { font-family: sans-serif; font-size: 10pt; }
+        .container { width: 80%; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .header h1 { font-size: 18pt; color: #3b82f6; }
+        .details, .summary { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .details td, .summary td, .summary th { padding: 8px; text-align: left; border: 1px solid #ddd; }
+        .summary th { background-color: #f3f4f6; text-align: center; }
+        .total-row td { font-weight: bold; background-color: #e5e7eb; }
+        .tax-info { text-align: right; margin-top: 15px; }
+        .footer { text-align: center; margin-top: 50px; font-size: 8pt; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Tax Invoice</h1>
+            <p>My E-Commerce Store | GSTIN: XXXXXXXXXXXXXX | Email: support@mystore.com</p>
+        </div>
+
+        <table class="details">
+            <tr>
+                <td style="width: 50%;">
+                    <strong>Invoice No:</strong> INV-{{ order.id }}<br>
+                    <strong>Invoice Date:</strong> {{ order.created|date:"M d, Y" }}<br>
+                    <strong>Payment ID:</strong> {{ order.razorpay_payment_id }}
+                </td>
+                <td style="width: 50%;">
+                    <strong>Billed To:</strong><br>
+                    {{ order.first_name }} {{ order.last_name }}<br>
+                    {{ order.address }}<br>
+                    {{ order.city }}, {{ order.postal_code }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="summary">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Description</th>
+                    <th style="width: 15%;">Unit Price</th>
+                    <th style="width: 15%;">Quantity</th>
+                    <th style="width: 15%;">Pre-Tax Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>₹ {{ item.price|floatformat:2 }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹ {{ item.get_cost|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="tax-info">
+            <p><strong>Subtotal:</strong> ₹ {{ order.get_total_cost_before_tax|floatformat:2 }}</p>
+            <p><strong>GST ({{ order.gst_rate|floatformat:0 }}%):</strong> ₹ {{ order.get_gst_amount|floatformat:2 }}</p>
+            <p style="font-size: 14pt; color: #22c55e;"><strong>GRAND TOTAL:</strong> ₹ {{ order.get_total_cost|floatformat:2 }}</p>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for your order. This is a computer-generated invoice and does not require a signature.</p>
+        </div>
+    </div>
+</body>
+</html>

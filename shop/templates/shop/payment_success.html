@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Payment Successful{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-10 rounded-xl shadow-2xl text-center">
+    <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    
+    <h1 class="text-4xl font-extrabold text-green-600 mb-4">Payment Successful!</h1>
+    <p class="text-xl text-gray-700 mb-6">Your order (#{{ order.id }}) has been placed successfully.</p>
+    
+    <div class="space-y-2 text-left bg-gray-50 p-6 rounded-lg mb-8">
+        <p class="text-lg font-medium">Payment ID: <span class="text-gray-600">{{ order.razorpay_payment_id }}</span></p>
+        <p class="text-lg font-medium">Total Amount Paid: <span class="font-bold text-blue-600">₹ {{ order.get_total_cost|floatformat:2 }}</span></p>
+    </div>
+
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Next Steps</h2>
+    <a href="{% url 'shop:invoice_download' order.id %}" class="bg-red-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-red-700 transition transform hover:scale-105 inline-flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Download GST Invoice
+    </a>
+    
+    <p class="mt-6 text-gray-500">A confirmation email with your order details has been sent to {{ order.email }}.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Your Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-extrabold mb-8 text-gray-800 text-center">🛍️ Your Shopping Cart</h1>
+
+    {% if cart %}
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Remove</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in cart %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <a href="{{ item.product.get_absolute_url }}" class="hover:text-blue-600">
+                                {{ item.product.name }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹ {{ item.price|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <form action="{% url 'shop:cart_add' item.product.id %}" method="post" class="flex items-center space-x-2">
+                                {{ item.update_quantity_form.quantity }}
+                                {{ item.update_quantity_form.update }}
+                                {% csrf_token %}
+                                <button type="submit" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">Update</button>
+                            </form>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">₹ {{ item.total_price|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{% url 'shop:cart_remove' item.product.id %}" class="text-red-600 hover:text-red-900">
+                                &times;
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                <div class="text-right">
+                    <p class="text-xl font-bold text-gray-800">Total: <span class="text-blue-600">₹ {{ cart.get_total_price|floatformat:2 }}</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 flex justify-between">
+            <a href="{% url 'shop:product_list' %}" class="text-blue-600 hover:text-blue-800 font-semibold py-3 px-6 rounded-md border border-blue-600 hover:bg-blue-50 transition">
+                ← Continue Shopping
+            </a>
+            <a href="{% url 'shop:checkout' %}" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-700 transition transform hover:scale-105">
+                Proceed to Checkout →
+            </a>
+        </div>
+
+    {% else %}
+        <div class="text-center bg-white p-12 rounded-xl shadow-lg">
+            <p class="text-gray-500 text-lg mb-6">Your cart is currently empty.</p>
+            <a href="{% url 'shop:product_list' %}" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition">
+                Start Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

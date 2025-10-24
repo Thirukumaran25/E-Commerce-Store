@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 bg-white p-8 rounded-xl shadow-lg">
+        
+        <!-- Product Image Placeholder -->
+        <div class="flex items-center justify-center bg-gray-50 rounded-lg h-80">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="object-contain h-full rounded-lg">
+            {% else %}
+                <span class="text-gray-400 text-6xl">🛒</span>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">{{ product.name }}</h1>
+            <p class="text-gray-600 mb-6">{{ product.description|linebreaks }}</p>
+
+            <p class="text-3xl font-bold text-green-600 mb-4">₹ {{ product.price|floatformat:2 }}</p>
+            
+            {% if product.available %}
+                <p class="text-sm text-gray-500 mb-2">In Stock: {{ product.stock }}</p>
+                <form action="{% url 'shop:cart_add' product.id %}" method="post" class="flex items-center space-x-4 mt-4">
+                    {% csrf_token %}
+                    {{ cart_product_form.quantity }}
+                    {{ cart_product_form.update }}
+                    <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition">
+                        🛍️ Add to Cart
+                    </button>
+                </form>
+            {% else %}
+                <p class="text-red-600 font-semibold mt-4">Out of Stock</p>
+            {% endif %}
+
+            <div class="mt-8">
+                <a href="{% url 'shop:product_list' %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                    ← Back to Products
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-12 bg-gray-50 p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-semibold mb-3 text-gray-800 border-b pb-2">Product Details</h2>
+        <ul class="text-gray-700 space-y-2">
+            <li><strong>Category:</strong> {{ product.category.name }}</li>
+            <li><strong>Price:</strong> ₹ {{ product.price|floatformat:2 }}</li>
+            <li><strong>Stock Available:</strong> {{ product.stock }}</li>
+            <li><strong>Added on:</strong> {{ product.created|date:"M d, Y" }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
