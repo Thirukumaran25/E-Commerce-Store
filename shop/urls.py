@@ -16,9 +16,8 @@ urlpatterns = [
 
     # Checkout & Payment
     path('checkout/', views.checkout, name='checkout'),
-    path('payment/verify/', views.payment_verify, name='payment_verify'),
-    path('order/<int:order_id>/success/', views.payment_success, name='payment_success'),
-    
+    path('payment/mock/<int:order_id>/', views.mock_payment, name='mock_payment'),
+    path('payment/success/<int:order_id>/', views.payment_success, name='payment_success'),
     # Invoice
     path('order/<int:order_id>/invoice/download/', views.invoice_download, name='invoice_download'),
 ]
