@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Secure Payment{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-200">
+        
+        <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">Secure Payment Gateway</h1>
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+
+        <div class="p-6 border-b border-gray-100">
+            <div class="text-center mb-4">
+                <p class="text-gray-500 text-sm">You are paying to **My E-Commerce Store**</p>
+            </div>
+            <div class="text-center">
+                <p class="text-4xl font-extrabold text-gray-900">₹ {{ amount|floatformat:2 }}</p>
+            </div>
+            <div class="text-sm text-gray-500 text-center mt-2">
+                Order ID: **#{{ order_id }}**
+            </div>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <h2 class="text-lg font-semibold text-gray-700">Choose Payment Method (Mock)</h2>
+            
+            <div class="border rounded-lg p-4 cursor-pointer bg-blue-50 border-blue-200">
+                <p class="font-bold text-blue-700 flex justify-between items-center">
+                    UPI / QR Code 
+                    <span class="text-sm text-blue-500">Fastest</span>
+                </p>
+                <div class="mt-2 p-3 bg-white border border-dashed rounded-md text-center">
+                    <p class="text-xs text-gray-500">Mock QR Code Display Area</p>
+                    <img src="https://via.placeholder.com/100x100?text=Mock+QR" alt="Mock QR Code" class="mx-auto my-2 rounded-md">
+                </div>
+            </div>
+
+            <div class="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition">
+                <p class="font-bold text-gray-700">Credit/Debit Card</p>
+                <p class="text-sm text-gray-500 mt-1">Mock form fields would appear here.</p>
+            </div>
+            
+        </div>
+
+        <div class="p-6 pt-0">
+            <a href="{% url 'shop:payment_success' order_id=order_id %}" 
+               class="w-full block text-center bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-green-600 transition transform hover:scale-[1.01] uppercase">
+                Complete Payment
+            </a>
+        </div>
+        
+        <div class="bg-gray-100 p-4 text-center text-xs text-gray-500">
+            <p>100% Secure Payment. Powered by **My Store Mock Gateway**.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
