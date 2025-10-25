@@ -122,6 +122,106 @@ def cart_detail(request):
 # --- Checkout and Payment Logic ---
 # ----------------------------------------------------
 
+# def checkout(request):
+#     cart = Cart(request)
+#     if not cart.get_total_price():
+#         messages.error(request, "Your cart is empty.")
+#         return redirect('shop:product_list')
+
+#     if request.method == 'POST':
+#         form = CheckoutForm(request.POST)
+#         if form.is_valid():
+#             order = form.save(commit=False)
+#             if request.user.is_authenticated:
+#                 order.user = request.user
+#             order.save()
+
+#             # Create OrderItems
+#             for item in cart:
+#                 OrderItem.objects.create(
+#                     order=order,
+#                     product=item['product'],
+#                     price=item['price'],
+#                     quantity=item['quantity']
+#                 )
+
+#             amount = int(order.get_total_cost() * 100)
+#             razorpay_order = RAZORPAY_CLIENT.order.create({
+#                 'amount': amount,
+#                 'currency': 'INR',
+#                 'payment_capture': '1'
+#             })
+            
+#             order.razorpay_order_id = razorpay_order['id']
+#             order.save()
+            
+#             return JsonResponse({
+#                 'razorpay_order_id': razorpay_order['id'],
+#                 'amount': amount,
+#                 'razorpay_key_id': settings.RAZORPAY_KEY_ID, 
+#                 'message': 'Order initiated'
+#             })
+#         else:
+#             return JsonResponse({'form_errors': form.errors}, status=400)
+#     else:
+#         initial_data = {}
+#         if request.user.is_authenticated:
+#             initial_data = {
+#                 'first_name': request.user.first_name,
+#                 'last_name': request.user.last_name,
+#                 'email': request.user.email,
+#             }
+#         form = CheckoutForm(initial=initial_data)
+
+#     return render(request, 'shop/checkout.html', {
+#         'form': form,
+#         'cart': cart,
+#         'razorpay_key_id': settings.RAZORPAY_KEY_ID
+#     })
+
+
+# @require_POST
+# def payment_verify(request):
+#     try:
+#         data = json.loads(request.body.decode('utf-8'))
+        
+#         razorpay_payment_id = data.get('razorpay_payment_id')
+#         razorpay_order_id = data.get('razorpay_order_id')
+#         razorpay_signature = data.get('razorpay_signature')
+        
+#         params_dict = {
+#             'razorpay_order_id': razorpay_order_id,
+#             'razorpay_payment_id': razorpay_payment_id,
+#             'razorpay_signature': razorpay_signature
+#         }
+        
+#         RAZORPAY_CLIENT.utility.verify_payment_signature(params_dict)
+
+#         order = get_object_or_404(Order, razorpay_order_id=razorpay_order_id)
+#         order.paid = True
+#         order.razorpay_payment_id = razorpay_payment_id
+#         order.razorpay_signature = razorpay_signature
+#         order.save()
+        
+#         Cart(request).clear()
+
+#         return JsonResponse({
+#             'status': 'success',
+#             'redirect_url': redirect('shop:payment_success', order_id=order.id).url
+#         })
+
+#     except razorpay.errors.SignatureVerificationError:
+#         return JsonResponse({'status': 'failure', 'message': 'Payment verification failed (Signature mismatch).'}, status=400)
+#     except Exception as e:
+#         return JsonResponse({'status': 'error', 'message': f'An internal error occurred: {str(e)}'}, status=500)
+
+
+# def payment_success(request, order_id):
+#     order = get_object_or_404(Order, id=order_id, paid=True)
+#     return render(request, 'shop/payment_success.html', {'order': order})
+
+
+
 def checkout(request):
     cart = Cart(request)
     if not cart.get_total_price():
@@ -131,9 +231,17 @@ def checkout(request):
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         if form.is_valid():
+            # 1. Create the Order
             order = form.save(commit=False)
             if request.user.is_authenticated:
                 order.user = request.user
+            
+            # Since we are mocking, we set paid=True AFTER the user clicks 
+            # "Complete Payment" on the mock page, so we leave it as False for now.
+            # order.paid = False 
+            
+            # Use a dummy payment ID to mark it as ready for mock payment
+            order.razorpay_payment_id = "MOCK_GATEWAY_PENDING"
             order.save()
 
             # Create OrderItems
@@ -145,25 +253,18 @@ def checkout(request):
                     quantity=item['quantity']
                 )
 
-            amount = int(order.get_total_cost() * 100)
-            razorpay_order = RAZORPAY_CLIENT.order.create({
-                'amount': amount,
-                'currency': 'INR',
-                'payment_capture': '1'
-            })
-            
-            order.razorpay_order_id = razorpay_order['id']
-            order.save()
-            
-            return JsonResponse({
-                'razorpay_order_id': razorpay_order['id'],
-                'amount': amount,
-                'razorpay_key_id': settings.RAZORPAY_KEY_ID, 
-                'message': 'Order initiated'
-            })
+            # 2. Redirect to the Mock Payment Page
+            # Pass the newly created order ID to the mock payment page
+            return redirect('shop:mock_payment', order_id=order.id)
         else:
-            return JsonResponse({'form_errors': form.errors}, status=400)
+            # Re-render with errors if form is invalid
+            context = {
+                'form': form,
+                'cart': cart,
+            }
+            return render(request, 'shop/checkout.html', context)
     else:
+        # GET request logic (unchanged)
         initial_data = {}
         if request.user.is_authenticated:
             initial_data = {
@@ -176,49 +277,44 @@ def checkout(request):
     return render(request, 'shop/checkout.html', {
         'form': form,
         'cart': cart,
-        'razorpay_key_id': settings.RAZORPAY_KEY_ID
     })
 
 
-@require_POST
-def payment_verify(request):
-    try:
-        data = json.loads(request.body.decode('utf-8'))
+def mock_payment(request, order_id):
+    """
+    Renders the mock payment page. The user confirms payment here.
+    """
+    order = get_object_or_404(Order, id=order_id)
+    
+    # If the order is already paid, redirect to success
+    if order.paid:
+        return redirect('shop:payment_success', order_id=order.id)
         
-        razorpay_payment_id = data.get('razorpay_payment_id')
-        razorpay_order_id = data.get('razorpay_order_id')
-        razorpay_signature = data.get('razorpay_signature')
-        
-        params_dict = {
-            'razorpay_order_id': razorpay_order_id,
-            'razorpay_payment_id': razorpay_payment_id,
-            'razorpay_signature': razorpay_signature
-        }
-        
-        RAZORPAY_CLIENT.utility.verify_payment_signature(params_dict)
-
-        order = get_object_or_404(Order, razorpay_order_id=razorpay_order_id)
-        order.paid = True
-        order.razorpay_payment_id = razorpay_payment_id
-        order.razorpay_signature = razorpay_signature
-        order.save()
-        
-        Cart(request).clear()
-
-        return JsonResponse({
-            'status': 'success',
-            'redirect_url': redirect('shop:payment_success', order_id=order.id).url
-        })
-
-    except razorpay.errors.SignatureVerificationError:
-        return JsonResponse({'status': 'failure', 'message': 'Payment verification failed (Signature mismatch).'}, status=400)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'An internal error occurred: {str(e)}'}, status=500)
+    return render(request, 'shop/mock_payment.html', {
+        'order_id': order.id,
+        'amount': order.get_total_cost(),
+    })
 
 
 def payment_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id, paid=True)
+    """
+    The final destination after payment. This is where we finalize the order.
+    """
+    order = get_object_or_404(Order, id=order_id)
+    
+    # If the order is not yet paid, mark it as paid and clear the cart
+    if not order.paid:
+        order.paid = True
+        # Assign a mock ID to simulate a successful transaction
+        order.razorpay_payment_id = f"MOCK_{order.id}_{order.created.strftime('%Y%m%d%H%M%S')}" 
+        order.save()
+        
+        # Clear the cart only after payment is confirmed
+        Cart(request).clear() 
+    
+    messages.success(request, "Your payment was processed successfully!")
     return render(request, 'shop/payment_success.html', {'order': order})
+
 
 
 # ----------------------------------------------------
